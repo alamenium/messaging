@@ -1,16 +1,50 @@
-import express from 'express';
+const express = require('express');
 const app = express();
+const http = require('http');
+const server = http.createServer(app);
+const { Server } = require("socket.io");
+const io = new Server(server);
 
+io.on('connection', socket=>{
+    console.log(socket.id);
+
+    socket.on("send-message", (message, room)=>{
+        if(room === '')
+            socket.broadcast.emit("receive-message", message);
+        else
+            socket.to(room).emit("receive-message", message);
+    });
+
+    socket.on("join-room", room=> {
+        leaveAllRooms(socket);
+        socket.join(room)
+    });
+})
+
+function leaveAllRooms(socket) {
+    const rooms = Object.keys(socket.rooms);
+    rooms.forEach((room) => {
+        // Exclude the default room (socket.id) from leaving
+        if (room !== socket.id) {
+            socket.leave(room);
+            console.log(`Socket left room: ${room}`);
+        }
+    });
+}
+
+const path = require('path');
+
+// Serve static files from the 'public' directory
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Route for serving the index.html file
 app.get('/', (req, res) => {
-    res.send('Choo Choo! Welcome to your Express app 🚅');
-})
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 
-app.get("/json", (req, res) => {
-    res.json({"Choo Choo": "Welcome to your Express app 🚅"});
-})
+// Get the port from the environment variable or use a default value (e.g., 4000)
+const port = process.env.PORT || 4000;
 
-const port = process.env.PORT || 3000;
-
-app.listen(port, () => {
-    console.log(`Example app listening on port ${port}`)
-})
+server.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+});
