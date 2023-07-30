@@ -43,7 +43,7 @@ app.get('/', (req, res) => {
 });
 
 // Get the port from the environment variable or use a default value (e.g., 4000)
-const port = process.env.PORT || 4000;
+const port = process.env.PORT || 3000;
 
 server.listen(port, () => {
     console.log(`Server is running on port ${port}`);
